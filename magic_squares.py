@@ -5,17 +5,18 @@ Matrix = List[List[int]]
 
 # indexes for 3x3 flat matrix
 row_idx = [(0, 1, 2), (3, 4, 5), (6, 7, 8)]
-col_idx = [tuple(j) for j in zip(*row_idx)]
+col_idx = list(zip(*row_idx))
 diags = [(0, 4, 8), (2, 4, 6)]
 indexes = (row_idx, col_idx, diags)
 
 
 def flatten(l: Matrix) -> List[int]:
-    """ Flattens list of list"""
+    """Flattens list of list"""
     return [i for ls in l for i in ls]
 
 
 def is_magic(square: List[int]) ->bool:
+    """returns True if its magic"""
     if len(set(square)) != len(square):
         return False
     else:
@@ -71,7 +72,7 @@ def calc_score(oldval: int, newval: int) -> int:
 
 def formingMagicSquare(s: Matrix) -> int:
     """Given a square, returns the minimum number of changes
-    ti transform the square into a magic square
+    to transform the square into a magic square
     """
     square = flatten(s)
     all_magics = get_all_magics()
