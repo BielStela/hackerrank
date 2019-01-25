@@ -1,78 +1,84 @@
 from typing import List, Tuple
+import random
 
 Matrix = List[List[int]]
 
-RAW = """5 3 4
-1 5 8
-6 4 2
-"""
-
-matrix = []
-
-
-for s in RAW.rstrip().split('\n'):
-    matrix.append([int(i) for i in s.split()])
+# indexes for 3x3 flat matrix
+row_idx = [(0, 1, 2), (3, 4, 5), (6, 7, 8)]
+col_idx = [tuple(j) for j in zip(*row_idx)]
+diags = [(0, 4, 8), (2, 4, 6)]
+indexes = (row_idx, col_idx, diags)
 
 
-def sum_ax(l: Matrix, axis: int) -> List[int]:
-    """ sum lists of lists numpy like
-    """
-    if axis == 1:
-        return [sum(i) for i in zip(*l)]
-    if axis == 0:  # sum transposed form (suicide for big matrix)
-        return [sum(i) for i in zip(*[list(j) for j in zip(*l)])]
+def flatten(l: Matrix) -> List[int]:
+    """ Flattens list of list"""
+    return [i for ls in l for i in ls]
 
 
-def sum_diagonal(l: Matrix, d: int) -> List[int]:
-
-    le = len(l)
-
-    if d == 1:
-        diag = [l[i][i] for i in range(len(l))]
-    elif d == 2:
-        diag = [l[i][j] for i, j in zip(range(le), reversed(range(le)))]
+def is_magic(square: List[int]) ->bool:
+    if len(set(square)) != len(square):
+        return False
     else:
-        raise ValueError(f'wrong diag param {d}')
-    return sum(diag)
+        flat_idx = [idt for l in indexes for idt in l]
+        for idx in flat_idx:
+            if sum(square[i] for i in idx) != 15:
+                return False
+        else:
+            return True
 
 
-def score(oldval: int, newval: int) -> int:
-    return abs(oldval - newval)
-
-
-def wrong_sums(l: Matrix) -> Tuple[List, List, bool, bool]:
-    """Returns the idx of every axis in a tuple
-    tuple[0]: list 
-        idx of wrong sums in axis 0 (rows)
-    tuple[1]: list
-        idx of wrong sums in axis 1 (columns)
-    tuple[2]: bool
-        if primary diagonal is dif to constant
-    tuple[3]: bool
-        if second diagonal is dif to constant
+def get_all_magics() -> Matrix:
+    """returns all possible 3x3 magic squares
+    with unique elements in range [1, 9]
     """
+    corner_i = (0, 2, 6, 8)  # place evens here
+    edge_i = (1, 3, 5, 7)  # place odds here
+    all_squares = []
 
-    const = magic_constant(len(l))
-    axis0 = [i for i, e in enumerate(sum_ax(l, 0)) if e != const]
-    axis1 = [i for i, e in enumerate(sum_ax(l, 1)) if e != const]
-    diag1 = sum_diagonal(l, 1) != const
-    diag2 = sum_diagonal(l, 2) != const
+    while True:
+        if len(all_squares) == 8:
+            break
 
-    return (axis0, axis1, diag1, diag2)
+        odds = [1, 3, 7, 9]
+        evens = [2, 4, 6, 8]
+
+        square = [0] * 9
+        square[4] = 5  # center is always 5
+
+        for i, e in enumerate(square):
+            if i == 4:  # don't touch the center
+                continue
+
+            elif i in corner_i:  # even
+                n = random.choice(evens)
+                evens.remove(n)
+                square[i] = n
+
+            elif i in edge_i:  # odds
+                n = random.choice(odds)
+                odds.remove(n)
+                square[i] = n
+
+        if is_magic(square) and square not in all_squares:
+            all_squares.append(square)
+
+    return all_squares
 
 
-def magic_constant(n: int) -> int:
-    return n*((n**2 + 1) / 2)
-
-
-# --------------------
-#  The func to submit
-# --------------------
+def calc_score(oldval: int, newval: int) -> int:
+    return abs(oldval - newval)
 
 
 def formingMagicSquare(s: Matrix) -> int:
     """Given a square, returns the minimum number of changes
     ti transform the square into a magic square
     """
+    square = flatten(s)
+    all_magics = get_all_magics()
+    scores = []
+    for magic_sq in all_magics:
+        score = sum([calc_score(old, new)
+                     for old, new in zip(magic_sq, square)])
+        scores.append(score)
 
-    assert isinstance(s, list)
+    return(min(scores))
